@@ -1,0 +1,134 @@
+{% load pwa %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    {% progressive_web_app_meta %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heros</title>
+</head>
+<body>
+    <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+        integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/grids-responsive-min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/base-min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Document</title>
+</head>
+
+
+<body>
+    {% progressive_web_app_script %}
+
+    <div class="ChatBot">
+        <div class="AreaConversacion">
+            <h1 class="TitleChat">Heros</h1>
+            <div id="chatLog"></div>
+                <div class="msg-box">
+                        <input type="text" class="ip-msg" id="newUserInput" placeholder="Escribe aqui..." />
+                        <span class="btn-group">
+                              <button class="fake-button" onclick="sendMessage()" id="btn"><i class="large material-icons">send</i></button>
+                        </span>
+                  </div>
+                </div>
+
+                <div class="dot-spinner" id="loader" style="display: none;">
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                    <div class="dot-spinner__dot"></div>
+                </div>
+        </div>
+    </div>
+</body>
+
+<script>
+
+    document.querySelector('video').playbackRate =  0.80;
+
+
+    function toggleSpinner(show) {
+        const loader = document.getElementById('loader');
+        loader.style.display = show ? 'block' : 'none';
+    }
+
+    function ConsumoApi() {
+        fetch('ApiGet', {
+            method: 'GET',
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta HTTP: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    
+    async function sendMessage() {
+        const userMessage = document.getElementById('newUserInput').value;
+        const chatLog = document.getElementById('chatLog');
+        const loader = document.getElementById('loader');
+
+        if (userMessage.trim() === '') {
+            return;
+        }
+
+        chatLog.innerHTML += `<div class="logs" id="user">Tu: ${userMessage}</div>`;
+        loader.style.display = 'block';
+
+        try {
+            const response = await fetch("{% url 'Comm' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({
+                    'user_input': userMessage
+                })
+            });
+
+            const data = await response.json();
+            chatLog.innerHTML += `<div class="logs" id="Bot">Heros: ${data.response}</div>`;
+
+        } catch (error) {
+            console.error('Error:', error);
+            chatLog.innerHTML += `<div class="logs error">Error: No se puede emitir una respuesta, por favor reporte la falla</div>`;
+        } finally {
+            loader.style.display = 'none';
+        }
+
+        document.getElementById('newUserInput').value = '';
+    }
+
+    var input = document.getElementById("newUserInput");
+
+    input.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            document.getElementById("btn").click();
+        }
+    });
+</script>
+
+</html>
+    
+</body>
+</html>
